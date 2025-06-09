@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Currency Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 30px;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      max-width: 400px;
+      margin: auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Currency Converter</h2>
+    <input type="number" id="amount" placeholder="Enter amount" />
+    <select id="fromCurrency"></select>
+    <select id="toCurrency"></select>
+    <button onclick="convert()">Convert</button>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const apiURL = "https://v6.exchangerate-api.com/v6/52be1dd208cecc71b886d76c/latest/USD";
+    const fromCurrency = document.getElementById("fromCurrency");
+    const toCurrency = document.getElementById("toCurrency");
+    const resultDiv = document.getElementById("result");
+    let rates = {};
+
+    // Load rates and populate currency dropdowns
+    async function loadRates() {
+      try {
+        const response = await fetch(apiURL);
+        const data = await response.json();
+        if (data.result !== "success") {
+          throw new Error("Failed to load exchange rates");
+        }
+
+        rates = data.conversion_rates;
+
+        Object.keys(rates).forEach(code => {
+          fromCurrency.add(new Option(code, code));
+          toCurrency.add(new Option(code, code));
+        });
+
+        fromCurrency.value = "USD";
+        toCurrency.value = "PKR";
+      } catch (err) {
+        resultDiv.innerText = "Error loading exchange rates.";
+        console.error(err);
+      }
+    }
+
+    // Convert currencies
+    function convert() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      const from = fromCurrency.value;
+      const to = toCurrency.value;
+
+      if (!amount || amount <= 0) {
+        resultDiv.innerText = "Please enter a valid amount.";
+        return;
+      }
+
+      const rateFromUSD = rates[from];
+      const rateToUSD = rates[to];
+
+      if (!rateFromUSD || !rateToUSD) {
+        resultDiv.innerText = "Invalid currency code.";
+        return;
+      }
+
+      const converted = (rateToUSD / rateFromUSD) * amount;
+      resultDiv.innerText = `${amount} ${from} = ${converted.toFixed(2)} ${to}`;
+    }
+
+    loadRates();
+  </script>
+</body>
+</html>
